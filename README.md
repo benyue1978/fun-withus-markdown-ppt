@@ -2,6 +2,8 @@
 
 A real-time Markdown PPT previewer that converts Markdown documents separated by `---` into slide-by-slide presentations. Perfect for content review and fine-tuning before uploading to platforms like gamma.app.
 
+<https://markdown.withus.fun>
+
 ## 🚀 Features
 
 - **Real-time Markdown Parsing**: Converts `---` separated content into individual slides
@@ -219,7 +221,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-If you encounter any issues or have questions, please [open an issue](https://github.com/your-username/markdown-ppt-previewer/issues) on GitHub.
+If you encounter any issues or have questions, please [open an issue](https://github.com/benyue1978/markdown-ppt-previewer/issues) on GitHub.
 
 ---
 
