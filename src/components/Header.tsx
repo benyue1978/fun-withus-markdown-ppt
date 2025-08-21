@@ -11,7 +11,8 @@ import {
   EditIcon, 
   EyeIcon, 
   DownloadIcon,
-  MenuIcon 
+  MenuIcon,
+  GitHubIcon
 } from '@/components/icons';
 import { cn } from '@/utils/cn';
 
@@ -115,6 +116,17 @@ export function Header({ className }: HeaderProps) {
               <EditIcon className="w-5 h-5" />
             )}
           </IconButton>
+
+          {/* GitHub link */}
+          <a
+            href="https://github.com/benyue1978/fun-withus-markdown-ppt"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+            title="View source code on GitHub"
+          >
+            <GitHubIcon className="w-5 h-5" />
+          </a>
 
           {/* Import button */}
           <FileImport />
