@@ -1,0 +1,33 @@
+{
+  "title": {
+    "en": "Fun With Us - Markdown Preview & Editor",
+    "zh": "Fun With Us - Markdown 预览与编辑器"
+  },
+  "description": {
+    "en": "Preview and edit Markdown content in real-time before creating presentations in Gamma. Perfect for content preparation, slide structure planning, and markdown formatting validation.",
+    "zh": "在 Gamma 中创建演示文稿之前，实时预览和编辑 Markdown 内容。完美适用于内容准备、幻灯片结构规划和 Markdown 格式验证。"
+  },
+  "icon": "/favicon.svg",
+  "keywords": {
+    "en": ["markdown", "preview", "editor", "gamma", "presentation", "content preparation", "slide planning", "markdown validation"],
+    "zh": ["markdown", "预览", "编辑器", "gamma", "演示文稿", "内容准备", "幻灯片规划", "markdown验证"]
+  },
+  "features": {
+    "en": [
+      "Real-time Markdown preview",
+      "Live content editing",
+      "Slide structure planning",
+      "Content preparation for Gamma",
+      "Markdown format validation",
+      "Local storage for drafts"
+    ],
+    "zh": [
+      "实时 Markdown 预览",
+      "实时内容编辑",
+      "幻灯片结构规划",
+      "Gamma 内容准备",
+      "Markdown 格式验证",
+      "草稿本地存储"
+    ]
+  }
+}

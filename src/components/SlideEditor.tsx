@@ -3,6 +3,8 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/utils/cn';
+import { downloadAsFile } from '@/utils/storage';
+import { slidesToMarkdown } from '@/utils/markdownParser';
 
 interface SlideEditorProps {
   className?: string;
@@ -129,8 +131,14 @@ export function SlideEditor({ className }: SlideEditorProps) {
     
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
+      // Save as Markdown file
+      if (state.presentation) {
+        const markdownContent = slidesToMarkdown(state.presentation.slides);
+        const filename = `${state.presentation.title || 'presentation'}.md`;
+        downloadAsFile(markdownContent, filename, 'text/markdown');
+      }
     }
-  }, [handleTabIndentation]);
+  }, [handleTabIndentation, state.presentation]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -191,6 +199,7 @@ And much more!"
           <div>• Press Tab to indent, Shift+Tab to unindent</div>
           <div>• Use --- to create new slides</div>
           <div>• Changes are saved automatically</div>
+          <div>• Press Ctrl+S (or Cmd+S) to save as Markdown file</div>
         </div>
       </div>
     </div>
