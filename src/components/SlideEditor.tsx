@@ -140,12 +140,35 @@ export function SlideEditor({ className }: SlideEditorProps) {
     }
   }, [handleTabIndentation, state.presentation]);
 
-  // Auto-resize textarea
+  // Auto-resize textarea - improved height management
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + 'px';
+      // Get the container height (available space)
+      const container = textarea.parentElement;
+      if (container) {
+        const containerHeight = container.clientHeight;
+        
+        // Set a reasonable height: use container height but cap it
+        const maxHeight = Math.min(containerHeight, 600);
+        const minHeight = 300;
+        
+        // Calculate target height based on content
+        textarea.style.height = 'auto';
+        const contentHeight = textarea.scrollHeight;
+        
+        // Use the larger of: content height, min height, or container height (capped)
+        const targetHeight = Math.max(minHeight, Math.min(contentHeight, maxHeight));
+        
+        textarea.style.height = `${targetHeight}px`;
+        
+        // Ensure scrolling works when content is longer
+        if (contentHeight > targetHeight) {
+          textarea.style.overflowY = 'auto';
+        } else {
+          textarea.style.overflowY = 'hidden';
+        }
+      }
     }
   }, [currentSlide?.content]);
 
@@ -159,7 +182,7 @@ export function SlideEditor({ className }: SlideEditorProps) {
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
-      <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+      <div className="flex items-center justify-between p-4 border-b bg-gray-50 flex-shrink-0">
         <h3 className="font-medium text-gray-900">
           Edit Slide {state.currentSlideIndex + 1}
         </h3>
@@ -168,17 +191,17 @@ export function SlideEditor({ className }: SlideEditorProps) {
         </div>
       </div>
       
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 overflow-hidden min-h-0">
         <textarea
           ref={textareaRef}
           value={currentSlide.content}
           onChange={(e) => handleContentChange(e.target.value)}
           onKeyDown={handleKeyDown}
           className={cn(
-            'w-full h-full min-h-[400px] p-4 border rounded-md',
+            'w-full h-full p-4 border rounded-md',
             'font-mono text-sm leading-relaxed',
             'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
-            'placeholder-gray-400 resize-none'
+            'placeholder-gray-400 resize-none overflow-y-auto'
           )}
           placeholder="Enter your markdown content here...
 
@@ -193,7 +216,7 @@ And much more!"
         />
       </div>
       
-      <div className="p-4 border-t bg-gray-50">
+      <div className="p-4 border-t bg-gray-50 flex-shrink-0">
         <div className="text-xs text-gray-500">
           <div>Tips:</div>
           <div>• Press Tab to indent, Shift+Tab to unindent</div>
