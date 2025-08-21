@@ -1,4 +1,5 @@
-module.exports = {
+/** @type {import('eslint').Linter.Config} */
+export default {
   extends: ['next/core-web-vitals'],
   env: {
     browser: true,
@@ -10,16 +11,15 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
-    // Add any custom rules here
   },
   overrides: [
     {
-      files: ['*.config.js', 'jest.setup.js'],
+      files: ['*.config.js', 'jest.setup.js', '.eslintrc.js'],
       env: {
         node: true,
       },
       rules: {
-        'no-undef': 'off',
+        // Add any custom rules here
       },
     },
   ],

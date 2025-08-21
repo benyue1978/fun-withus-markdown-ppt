@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { SlideThumbnail } from './SlideThumbnail';
 import { Button } from '@/components/ui/Button';
@@ -14,6 +14,8 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const { state, dispatch } = useApp();
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   
   const { presentation, currentSlideIndex, sidebarCollapsed } = state;
 
@@ -33,7 +35,32 @@ export function Sidebar({ className }: SidebarProps) {
   };
 
   const handleAddSlide = () => {
-    dispatch({ type: 'ADD_SLIDE' });
+    dispatch({ 
+      type: 'ADD_SLIDE', 
+      payload: { index: currentSlideIndex + 1 }
+    });
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+      dispatch({
+        type: 'REORDER_SLIDES',
+        payload: {
+          fromIndex: draggedIndex,
+          toIndex: dragOverIndex,
+        },
+      });
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragOver = (index: number) => {
+    setDragOverIndex(index);
   };
 
   const toggleSidebar = () => {
@@ -60,13 +87,13 @@ export function Sidebar({ className }: SidebarProps) {
           'fixed lg:relative inset-y-0 left-0 z-50 lg:z-0',
           'w-80 bg-white border-r border-gray-200',
           'transform transition-transform duration-300 ease-in-out',
-          'lg:transform-none',
+          'lg:transform-none flex flex-col h-full',
           sidebarCollapsed ? '-translate-x-full lg:w-0 lg:overflow-hidden' : 'translate-x-0',
           className
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+        <div className="flex items-center justify-between p-4 border-b bg-gray-50 flex-shrink-0">
           <h2 className="font-semibold text-gray-900">Slides</h2>
           <div className="flex items-center space-x-2">
             <Button
@@ -89,7 +116,7 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
 
         {/* Slide list */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 min-h-0">
           <div className="space-y-3">
             {presentation.slides.map((slide, index) => (
               <SlideThumbnail
@@ -100,13 +127,18 @@ export function Sidebar({ className }: SidebarProps) {
                 onClick={() => handleSlideClick(index)}
                 onEdit={() => handleEditSlide(index)}
                 onDelete={() => handleDeleteSlide(index)}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                isDragging={draggedIndex === index}
+                isDragOver={dragOverIndex === index}
               />
             ))}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t bg-gray-50">
+        <div className="p-4 border-t bg-gray-50 flex-shrink-0">
           <div className="text-sm text-gray-600">
             <div className="flex justify-between">
               <span>Total slides:</span>

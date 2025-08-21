@@ -46,10 +46,18 @@ export function extractSlideTitle(content: string): string {
     return headingMatch[1].trim();
   }
   
-  // Fallback: use first line, truncated
+  // Fallback: use first line, truncated and cleaned of markdown
   const firstLine = content.split('\n')[0].trim();
   if (firstLine.length > 0) {
-    return firstLine.length > 50 ? firstLine.substring(0, 47) + '...' : firstLine;
+    // Remove markdown formatting from title
+    const cleanedLine = firstLine
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+      .replace(/\*(.*?)\*/g, '$1') // Remove italic
+      .replace(/`(.*?)`/g, '$1') // Remove inline code
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove links, keep text
+      .trim();
+    
+    return cleanedLine.length > 50 ? cleanedLine.substring(0, 47) + '...' : cleanedLine;
   }
   
   return 'Untitled Slide';

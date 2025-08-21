@@ -5,9 +5,12 @@ A real-time Markdown PPT previewer that converts Markdown documents separated by
 ## 🚀 Features
 
 - **Real-time Markdown Parsing**: Converts `---` separated content into individual slides
+- **File Import**: Open Markdown files or drag & drop them onto the page
+- **Dynamic Slide Splitting**: Type `---` in editor to automatically create new slides
 - **Live Preview**: Instant rendering of slides with proper Markdown styling
 - **Split View Editing**: Side-by-side editor and preview for efficient editing
-- **Slide Management**: Add, delete, and reorder slides easily
+- **Drag & Drop Reordering**: Rearrange slides by dragging thumbnails
+- **Smart Slide Management**: Add, delete slides with intelligent positioning
 - **Export Options**: Export to Markdown, HTML, or JSON formats
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
 - **Auto-save**: Automatic local storage of your presentations
@@ -60,8 +63,9 @@ A real-time Markdown PPT previewer that converts Markdown documents separated by
 
 ### Creating Slides
 
-1. Enter your Markdown content in the editor
-2. Use `---` to separate slides:
+1. **Import existing files**: Click "Import MD" or drag & drop `.md` files
+2. **Create new content**: Enter your Markdown content in the editor
+3. **Use `---` to separate slides**:
 
 ```markdown
 # Welcome Slide
@@ -82,6 +86,13 @@ function hello() {
   console.log("Hello, World!");
 }
 ```
+
+### Slide Management
+
+- **Add Slides**: Click the "+" button to add after current slide
+- **Reorder Slides**: Drag slide thumbnails in the sidebar
+- **Dynamic Splitting**: Type `---` in editor to split content into multiple slides
+- **Delete Slides**: Click the trash icon on slide thumbnails
 
 ### Navigation
 

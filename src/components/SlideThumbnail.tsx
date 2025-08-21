@@ -13,6 +13,11 @@ interface SlideThumbnailProps {
   onClick: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onDragStart?: (index: number) => void;
+  onDragEnd?: () => void;
+  onDragOver?: (index: number) => void;
+  isDragging?: boolean;
+  isDragOver?: boolean;
 }
 
 export function SlideThumbnail({
@@ -22,17 +27,38 @@ export function SlideThumbnail({
   onClick,
   onEdit,
   onDelete,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  isDragging = false,
+  isDragOver = false,
 }: SlideThumbnailProps) {
   return (
     <div
+      draggable
       className={cn(
         'group relative p-3 border rounded-lg cursor-pointer transition-all',
         'hover:shadow-md hover:border-primary-300',
         isActive
           ? 'bg-primary-50 border-primary-500 shadow-sm'
-          : 'bg-white border-gray-200'
+          : 'bg-white border-gray-200',
+        isDragging && 'opacity-50 scale-95',
+        isDragOver && 'border-primary-400 bg-primary-25'
       )}
       onClick={onClick}
+      onDragStart={(e) => {
+        e.stopPropagation();
+        onDragStart?.(index);
+      }}
+      onDragEnd={(e) => {
+        e.stopPropagation();
+        onDragEnd?.();
+      }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onDragOver?.(index);
+      }}
     >
       {/* Slide number */}
       <div className="flex items-center justify-between mb-2">

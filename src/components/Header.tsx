@@ -5,6 +5,7 @@ import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
 import { ExportPanel } from './ExportPanel';
+import { FileImport } from './FileImport';
 import { 
   DocumentIcon, 
   EditIcon, 
@@ -114,6 +115,9 @@ export function Header({ className }: HeaderProps) {
               <EditIcon className="w-5 h-5" />
             )}
           </IconButton>
+
+          {/* Import button */}
+          <FileImport />
 
           {/* Export button */}
           <Button

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { AppState, Presentation, Slide } from '@/types';
-import { parseMarkdownSlides, slidesToMarkdown, createSlideTemplate } from '@/utils/markdownParser';
+import { parseMarkdownSlides, slidesToMarkdown, createSlideTemplate, extractSlideTitle } from '@/utils/markdownParser';
 import { saveToLocalStorage, loadFromLocalStorage } from '@/utils/storage';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -23,7 +23,7 @@ type AppAction =
 const initialState: AppState = {
   presentation: null,
   currentSlideIndex: 0,
-  isEditing: false,
+  isEditing: true,
   sidebarCollapsed: false,
 };
 
@@ -62,6 +62,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         updatedSlides[action.payload.index] = {
           ...updatedSlides[action.payload.index],
           content: action.payload.content,
+          title: extractSlideTitle(action.payload.content),
         };
       }
       return {
@@ -74,15 +75,23 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
 
     case 'ADD_SLIDE':
-      if (!state.presentation) return state;
+      console.log('ADD_SLIDE action called:', action.payload);
+      if (!state.presentation) {
+        console.log('No presentation found, returning state');
+        return state;
+      }
+      
       const newSlide: Slide = {
         id: uuidv4(),
         content: action.payload?.content || createSlideTemplate(),
         title: 'New Slide',
         order: action.payload?.index ?? state.presentation.slides.length,
       };
+      
       const slidesWithNew = [...state.presentation.slides];
       const insertIndex = action.payload?.index ?? slidesWithNew.length;
+      console.log('Inserting new slide at index:', insertIndex, 'total slides before:', slidesWithNew.length);
+      
       slidesWithNew.splice(insertIndex, 0, newSlide);
       
       // Update order for all slides
@@ -90,6 +99,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
         slide.order = index;
       });
 
+      console.log('New slides array length:', slidesWithNew.length);
+      
       return {
         ...state,
         presentation: {
@@ -145,10 +156,16 @@ function appReducer(state: AppState, action: AppAction): AppState {
       const parseResult = parseMarkdownSlides(action.payload);
       if (parseResult.slides.length === 0) return state;
       
+      // Update slide titles after parsing
+      const parsedSlides = parseResult.slides.map(slide => ({
+        ...slide,
+        title: extractSlideTitle(slide.content),
+      }));
+      
       const newPresentation: Presentation = {
         id: state.presentation?.id || uuidv4(),
-        title: parseResult.slides[0]?.title || 'Untitled Presentation',
-        slides: parseResult.slides,
+        title: parsedSlides[0]?.title || 'Untitled Presentation',
+        slides: parsedSlides,
         createdAt: state.presentation?.createdAt || new Date(),
         updatedAt: new Date(),
       };
@@ -156,7 +173,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         presentation: newPresentation,
-        currentSlideIndex: Math.min(state.currentSlideIndex, parseResult.slides.length - 1),
+        currentSlideIndex: Math.min(state.currentSlideIndex, parsedSlides.length - 1),
       };
 
     case 'RESET_PRESENTATION':

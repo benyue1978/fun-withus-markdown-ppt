@@ -14,62 +14,123 @@ export function SlideEditor({ className }: SlideEditorProps) {
   
   const currentSlide = state.presentation?.slides[state.currentSlideIndex];
 
-  const handleContentChange = useCallback((value: string) => {
-    if (state.currentSlideIndex !== undefined) {
-      dispatch({
-        type: 'UPDATE_SLIDE',
-        payload: {
-          index: state.currentSlideIndex,
-          content: value,
-        },
-      });
-    }
-  }, [dispatch, state.currentSlideIndex]);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    // Handle tab for indentation
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const textarea = e.currentTarget as HTMLTextAreaElement;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const value = textarea.value;
-      
-      if (e.shiftKey) {
-        // Remove indentation
-        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
-        const lineEnd = value.indexOf('\n', start);
-        const currentLine = value.substring(lineStart, lineEnd === -1 ? value.length : lineEnd);
-        
-        if (currentLine.startsWith('  ')) {
-          const newValue = value.substring(0, lineStart) + currentLine.substring(2) + value.substring(lineEnd === -1 ? value.length : lineEnd);
-          handleContentChange(newValue);
-          
-          // Restore cursor position
-          setTimeout(() => {
-            textarea.selectionStart = textarea.selectionEnd = start - 2;
-          }, 0);
-        }
-      } else {
-        // Add indentation
-        const newValue = value.substring(0, start) + '  ' + value.substring(end);
-        handleContentChange(newValue);
-        
-        // Restore cursor position
-        setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = start + 2;
-        }, 0);
-      }
+  const createNewSlide = useCallback((value: string) => {
+    console.log('Creating new slide...');
+    let contentWithoutSeparator = value.trim();
+    if (contentWithoutSeparator.endsWith('---')) {
+      contentWithoutSeparator = contentWithoutSeparator.slice(0, -3).trim();
     }
     
-    // Save shortcut
-    if (e.ctrlKey || e.metaKey) {
-      if (e.key === 's') {
-        e.preventDefault();
-        // Auto-save is already handled by the context
+    dispatch({
+      type: 'UPDATE_SLIDE',
+      payload: {
+        index: state.currentSlideIndex,
+        content: contentWithoutSeparator,
+      },
+    });
+    
+    setTimeout(() => {
+      console.log('Adding new slide after index:', state.currentSlideIndex);
+      dispatch({
+        type: 'ADD_SLIDE',
+        payload: { index: state.currentSlideIndex + 1 },
+      });
+    }, 100);
+  }, [dispatch, state.currentSlideIndex]);
+
+  const updateMultipleSlides = useCallback((value: string) => {
+    console.log('Multiple slides detected, updating full content...');
+    const allSlides = state.presentation?.slides || [];
+    const fullContent = allSlides.map((slide, index) => {
+      if (index === state.currentSlideIndex) {
+        return value;
       }
+      return slide.content;
+    }).join('\n\n---\n\n');
+    
+    dispatch({ type: 'UPDATE_CONTENT', payload: fullContent });
+  }, [dispatch, state.currentSlideIndex, state.presentation?.slides]);
+
+  const updateSingleSlide = useCallback((value: string) => {
+    console.log('Updating single slide content...');
+    dispatch({
+      type: 'UPDATE_SLIDE',
+      payload: {
+        index: state.currentSlideIndex,
+        content: value,
+      },
+    });
+  }, [dispatch, state.currentSlideIndex]);
+
+  const checkSeparatorEnd = useCallback((value: string) => {
+    return value.endsWith('---') || value.endsWith('---\n') || value.endsWith('---\r\n');
+  }, []);
+
+  const handleContentChange = useCallback((value: string) => {
+    console.log('handleContentChange called with:', { value: value.substring(0, 100) + '...', length: value.length });
+    
+    const endsWithSeparator = checkSeparatorEnd(value);
+    console.log('Ends with separator:', endsWithSeparator);
+    
+    if (endsWithSeparator) {
+      createNewSlide(value);
+      return;
+    }
+    
+    const separatorCount = (value.match(/^---\s*$/gm) || []).length;
+    console.log('Separator count:', separatorCount);
+    
+    if (separatorCount > 0) {
+      updateMultipleSlides(value);
+    } else if (state.currentSlideIndex !== undefined) {
+      updateSingleSlide(value);
+    }
+  }, [checkSeparatorEnd, createNewSlide, updateMultipleSlides, updateSingleSlide, state.currentSlideIndex]);
+
+  const removeIndentation = useCallback((textarea: HTMLTextAreaElement, start: number, value: string) => {
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+    const lineEnd = value.indexOf('\n', start);
+    const currentLine = value.substring(lineStart, lineEnd === -1 ? value.length : lineEnd);
+    
+    if (currentLine.startsWith('  ')) {
+      const newValue = value.substring(0, lineStart) + currentLine.substring(2) + value.substring(lineEnd === -1 ? value.length : lineEnd);
+      handleContentChange(newValue);
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start - 2;
+      }, 0);
     }
   }, [handleContentChange]);
+
+  const addIndentation = useCallback((textarea: HTMLTextAreaElement, start: number, end: number, value: string) => {
+    const newValue = value.substring(0, start) + '  ' + value.substring(end);
+    handleContentChange(newValue);
+    setTimeout(() => {
+      textarea.selectionStart = textarea.selectionEnd = start + 2;
+    }, 0);
+  }, [handleContentChange]);
+
+  const handleTabIndentation = useCallback((textarea: HTMLTextAreaElement, shiftKey: boolean) => {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+    
+    if (shiftKey) {
+      removeIndentation(textarea, start, value);
+    } else {
+      addIndentation(textarea, start, end, value);
+    }
+  }, [removeIndentation, addIndentation]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      handleTabIndentation(e.currentTarget as HTMLTextAreaElement, e.shiftKey);
+    }
+    
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+    }
+  }, [handleTabIndentation]);
 
   // Auto-resize textarea
   useEffect(() => {
