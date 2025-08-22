@@ -140,38 +140,6 @@ export function SlideEditor({ className }: SlideEditorProps) {
     }
   }, [handleTabIndentation, state.presentation]);
 
-  // Auto-resize textarea - improved height management
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      // Get the container height (available space)
-      const container = textarea.parentElement;
-      if (container) {
-        const containerHeight = container.clientHeight;
-        
-        // Set a reasonable height: use container height but cap it
-        const maxHeight = Math.min(containerHeight, 600);
-        const minHeight = 300;
-        
-        // Calculate target height based on content
-        textarea.style.height = 'auto';
-        const contentHeight = textarea.scrollHeight;
-        
-        // Use the larger of: content height, min height, or container height (capped)
-        const targetHeight = Math.max(minHeight, Math.min(contentHeight, maxHeight));
-        
-        textarea.style.height = `${targetHeight}px`;
-        
-        // Ensure scrolling works when content is longer
-        if (contentHeight > targetHeight) {
-          textarea.style.overflowY = 'auto';
-        } else {
-          textarea.style.overflowY = 'hidden';
-        }
-      }
-    }
-  }, [currentSlide?.content]);
-
   if (!currentSlide) {
     return (
       <div className={cn('flex items-center justify-center h-full', className)}>
@@ -203,6 +171,11 @@ export function SlideEditor({ className }: SlideEditorProps) {
             'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
             'placeholder-gray-400 resize-none overflow-y-auto'
           )}
+          style={{
+            height: '100%',
+            minHeight: '100%',
+            boxSizing: 'border-box'
+          }}
           placeholder="Enter your markdown content here...
 
 Use --- to separate slides

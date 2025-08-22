@@ -36,13 +36,13 @@ export function MainContent({ className }: MainContentProps) {
   return (
     <div className={cn('flex flex-col h-full', className)}>
       {/* Main content area */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden min-h-0">
         {isEditing ? (
           // Split view: Editor + Preview
           <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
             {/* Editor */}
-            <div className="border-r border-gray-200 overflow-hidden">
-              <SlideEditor />
+            <div className="border-r border-gray-200 overflow-hidden flex flex-col">
+              <SlideEditor className="flex-1 min-h-0" />
             </div>
             
             {/* Preview */}
