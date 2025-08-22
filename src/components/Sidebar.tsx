@@ -1,12 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { SlideThumbnail } from './SlideThumbnail';
+import { InsertLine } from './InsertLine';
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
 import { PlusIcon, MenuIcon, XIcon } from '@/components/icons';
 import { cn } from '@/utils/cn';
+import { useDragReorder } from '@/hooks/useDragReorder';
+import { useAutoScroll } from '@/hooks/useAutoScroll';
 
 interface SidebarProps {
   className?: string;
@@ -14,10 +17,38 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const { state, dispatch } = useApp();
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  
   const { presentation, currentSlideIndex, sidebarCollapsed } = state;
+  const slideListRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll functionality for drag operations
+  const autoScroll = useAutoScroll({
+    config: {
+      threshold: 100,   // Start scrolling when within 50px of edge
+      maxSpeed: 0.5,   // Ultra slow scroll speed for precise control
+      acceleration: 0.01, // Extremely gentle acceleration
+    },
+  });
+
+  // Set the scrollable container
+  useEffect(() => {
+    autoScroll.setContainer(slideListRef.current);
+  }, [autoScroll]);
+
+  // Drag and drop functionality
+  const { dragState, handleDragStart, handleDragOver, handleDragEnd: originalHandleDragEnd } = useDragReorder({
+    onReorder: (fromIndex, toIndex) => {
+      dispatch({
+        type: 'REORDER_SLIDES',
+        payload: { fromIndex, toIndex },
+      });
+    },
+  });
+
+  // Enhanced drag end handler that also stops auto-scroll
+  const handleDragEnd = () => {
+    autoScroll.stopAutoScroll();
+    originalHandleDragEnd();
+  };
 
   const handleSlideClick = (index: number) => {
     dispatch({ type: 'SET_CURRENT_SLIDE', payload: index });
@@ -41,27 +72,7 @@ export function Sidebar({ className }: SidebarProps) {
     });
   };
 
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
-  };
 
-  const handleDragEnd = () => {
-    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
-      dispatch({
-        type: 'REORDER_SLIDES',
-        payload: {
-          fromIndex: draggedIndex,
-          toIndex: dragOverIndex,
-        },
-      });
-    }
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  };
-
-  const handleDragOver = (index: number) => {
-    setDragOverIndex(index);
-  };
 
   const toggleSidebar = () => {
     dispatch({ type: 'TOGGLE_SIDEBAR' });
@@ -116,24 +127,74 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
 
         {/* Slide list */}
-        <div className="flex-1 overflow-y-auto p-4 min-h-0">
+        <div 
+          ref={slideListRef}
+          className="flex-1 overflow-y-auto p-4 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400"
+          onDragEnter={autoScroll.handleDragEnter}
+          onDragOver={(e) => {
+            // Handle drag over the entire container to catch gaps between slides
+            e.preventDefault();
+            e.stopPropagation();
+            // Update auto-scroll position
+            autoScroll.updateAutoScroll(e.clientY);
+          }}
+          onDragLeave={autoScroll.handleDragLeave}
+          onDrop={(e) => {
+            // Handle drop on the container to ensure consistent behavior
+            e.preventDefault();
+            e.stopPropagation();
+            autoScroll.stopAutoScroll();
+            handleDragEnd();
+          }}
+        >
           <div className="space-y-3">
-            {presentation.slides.map((slide, index) => (
-              <SlideThumbnail
-                key={slide.id}
-                slide={slide}
-                index={index}
-                isActive={index === currentSlideIndex}
-                onClick={() => handleSlideClick(index)}
-                onEdit={() => handleEditSlide(index)}
-                onDelete={() => handleDeleteSlide(index)}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                onDragOver={handleDragOver}
-                isDragging={draggedIndex === index}
-                isDragOver={dragOverIndex === index}
-              />
-            ))}
+            {presentation.slides.map((slide, index) => {
+              const isDragging = dragState.draggedIndex === index;
+              const showLineAbove = dragState.dragOverIndex === index && dragState.dragOverPosition === 'above';
+              const showLineBelow = dragState.dragOverIndex === index && dragState.dragOverPosition === 'below';
+              
+              return (
+                <React.Fragment key={slide.id}>
+                  {/* Show insert line above */}
+                  {showLineAbove && (
+                    <InsertLine 
+                      onDrop={handleDragEnd}
+                      onDragOver={(e) => {
+                        // Maintain the current drag state when hovering over the line
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    />
+                  )}
+                  
+                  {/* The actual slide thumbnail */}
+                  <SlideThumbnail
+                    slide={slide}
+                    index={index}
+                    isActive={index === currentSlideIndex}
+                    onClick={() => handleSlideClick(index)}
+                    onEdit={() => handleEditSlide(index)}
+                    onDelete={() => handleDeleteSlide(index)}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={handleDragOver}
+                    isDragging={isDragging}
+                  />
+                  
+                  {/* Show insert line below */}
+                  {showLineBelow && (
+                    <InsertLine 
+                      onDrop={handleDragEnd}
+                      onDragOver={(e) => {
+                        // Maintain the current drag state when hovering over the line
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    />
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
         </div>
 

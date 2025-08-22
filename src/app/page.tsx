@@ -5,12 +5,11 @@ import { AppProvider } from '@/contexts/AppContext';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { MainContent } from '@/components/MainContent';
-import { DragDropImport } from '@/components/DragDropImport';
 
 export default function HomePage() {
   return (
     <AppProvider>
-      <DragDropImport className="h-screen flex flex-col overflow-hidden">
+      <div className="h-screen flex flex-col overflow-hidden">
         {/* Header */}
         <Header />
         
@@ -24,7 +23,7 @@ export default function HomePage() {
             <MainContent />
           </div>
         </div>
-      </DragDropImport>
+      </div>
     </AppProvider>
   );
 }
